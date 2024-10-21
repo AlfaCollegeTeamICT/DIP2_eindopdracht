@@ -21,7 +21,7 @@ class Film(db.Model):
 
 # !! Maak een class voor de gebruikers aan zodat er geregistreert en ingelogt kan worden zodat er een tabel beschikbaar is in de database
 
-class Loggin(db.Model):
+class Logging(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     film_id = db.Column(db.Integer, db.ForeignKey('film.id'), nullable=False)
     renttimestamp = db.Column(db.DateTime, nullable=False, default = datetime.now())
