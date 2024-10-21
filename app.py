@@ -3,7 +3,9 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from datetime import datetime
 import os
+
 #Vergeet niet een nieuwe requirements file te maken als je nieuwe dingen toevoegd via pip install!
+# $ pip freeze > requirements.txt
 
 app = Flask(__name__)
 
@@ -30,10 +32,11 @@ class Logging(db.Model):
     action = db.Column(db.Integer, nullable=False)
     timestamp = db.Column(db.DateTime, nullable=False, default = datetime.now())
     
-
+# Aanmaken database
 with app.app_context():
     db.create_all()
 
+# Routes
 @app.route('/')
 def home():
     return render_template('home.html')
@@ -57,6 +60,10 @@ def register():
 def logout():
     #logout functionaliteit toevoegen de pass mag hiervoor weggehaald worden
     pass
+
+@app.route('/opdracht')
+def opdracht():
+    return render_template('opdracht.html')
 
 #voeg een route toe waar je bij komt op moment dat je naar een url gaat waar je geen toegang tot hebt.
 #bijvoorbeeld op moment dat je naar de videotheek wil als je niet ingelogd bent
