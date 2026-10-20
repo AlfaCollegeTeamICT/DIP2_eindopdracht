@@ -1,7 +1,6 @@
 from flask import Flask, render_template
-from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
-from datetime import datetime
+import sqlite3
 import os
 
 #Vergeet niet een nieuwe requirements file te maken als je nieuwe dingen toevoegd via pip install!
@@ -11,30 +10,43 @@ app = Flask(__name__)
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 SECRET_KEY = os.urandom(32)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'videotheek.db')
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+DATABASE = os.path.join(basedir, 'videotheek.db')
 
 CORS(app)
 
-db = SQLAlchemy(app)
+def get_db_connection():
+    conn = sqlite3.connect(DATABASE)
+    conn.row_factory = sqlite3.Row
+    conn.execute('PRAGMA foreign_keys = ON')
+    return conn
 
-class Film(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(150), nullable=False)
-    status = db.Column(db.String(50), nullable=False)
+def create_database():
+    conn = get_db_connection()
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS film (
+            id INTEGER PRIMARY KEY,
+            title VARCHAR(150) NOT NULL,
+            status VARCHAR(50) NOT NULL
+        )
+    ''')
 
-# !! Maak een class voor de gebruikers aan zodat er geregistreert en ingelogt kan worden zodat er een tabel beschikbaar is in de database
-# Zorg ervoor dat deze gekoppeld word aan de logging tabel om ook te laten zien welke gebruiker een actie uitvoert
+    # !! Maak een tabel voor de gebruikers aan zodat er geregistreert en ingelogt kan worden
+    # Zorg ervoor dat deze gekoppeld word aan de logging tabel om ook te laten zien welke gebruiker een actie uitvoert
 
-class Logging(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    film_id = db.Column(db.Integer, db.ForeignKey('film.id'), nullable=False)
-    action = db.Column(db.Integer, nullable=False)
-    timestamp = db.Column(db.DateTime, nullable=False, default = datetime.now())
-    
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS logging (
+            id INTEGER PRIMARY KEY,
+            film_id INTEGER NOT NULL,
+            action INTEGER NOT NULL,
+            timestamp DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (film_id) REFERENCES film (id)
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
 # Aanmaken database
-with app.app_context():
-    db.create_all()
+create_database()
 
 # Routes
 @app.route('/')
